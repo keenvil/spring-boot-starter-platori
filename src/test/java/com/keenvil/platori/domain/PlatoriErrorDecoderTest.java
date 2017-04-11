@@ -1,0 +1,190 @@
+package com.keenvil.platori.domain;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Reader;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
+
+import org.easymock.TestSubject;
+import org.junit.Test;
+
+import com.keenvil.core.error.KeenvilApiException.Authorization;
+import com.keenvil.core.error.KeenvilApiException.Forbidden;
+import com.keenvil.core.error.KeenvilApiException.InvalidResourceState;
+import com.keenvil.core.error.KeenvilApiException.ResourceNotFound;
+import com.keenvil.core.error.PlatformError;
+
+import feign.Response;
+import feign.Response.Body;
+
+public class PlatoriErrorDecoderTest {
+
+  @TestSubject
+  private PlatoriErrorDecoder decoder = new PlatoriErrorDecoder();
+
+  private class MockBody implements Body {
+
+    @Override
+    public void close() throws IOException {
+    }
+
+    @Override
+    public Integer length() {
+      return null;
+    }
+
+    @Override
+    public boolean isRepeatable() {
+      return false;
+    }
+
+    @Override
+    public InputStream asInputStream() throws IOException {
+      return null;
+    }
+
+    @Override
+    public Reader asReader() throws IOException {
+      return null;
+    }
+    
+    @Override
+    public String toString() {
+      return "data";
+    }
+  }
+
+  private Body mockBody = new MockBody();
+
+  @Test
+  @SuppressWarnings("unchecked")
+  public void decodeUnauthorized() throws Exception {
+    Map<String, Collection<String>> map = Collections.EMPTY_MAP;
+    Response response = Response.create(401, null, map, mockBody);
+    
+    try {
+      throw decoder.decode("key", response);
+    } catch (Authorization exception) {
+      assertThat(exception.getMessage(),
+          is("Authorization error. Calling method key with status code 401 and"
+              + " response data."));
+    }
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
+  public void decodForbidden() throws Exception {
+    Map<String, Collection<String>> map = Collections.EMPTY_MAP;
+    Response response = Response.create(403, null, map, mockBody);
+    
+    try {
+      throw decoder.decode("key", response);
+    } catch (Forbidden exception) {
+      assertThat(exception.getMessage(),
+          is("Can not grant access to the requested resource."
+              + " Calling method key with status code 403 and response data."));
+    }
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
+  public void decode404() throws Exception {
+    Map<String, Collection<String>> map = Collections.EMPTY_MAP;
+    Response response = Response.create(404, null, map, mockBody);
+    
+    try {
+      throw decoder.decode("key", response);
+    } catch (ResourceNotFound exception) {
+      assertThat(exception.getMessage(),
+          is("Resource not found."
+              + " Calling method key with status code 404 and response data."));
+    }
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
+  public void decodeConflict() throws Exception {
+    Map<String, Collection<String>> map = Collections.EMPTY_MAP;
+    Response response = Response.create(409, null, map, mockBody);
+    
+    try {
+      throw decoder.decode("key", response);
+    } catch (InvalidResourceState exception) {
+      assertThat(exception.getMessage(),
+          is("There is a conflict with the current state of the target"
+              + " resource. Calling method key with status code 409 and"
+              + " response data."));
+    }
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
+  public void decodeUnprocessableEntity() throws Exception {
+    mockBody = new MockBody() {
+      @Override
+      public InputStream asInputStream() throws IOException {
+        String json = "["
+            + "{"
+            +  "\"httpStatus\": \"404\","
+            +  "\"code\": \"entityNotFound\","
+            +  "\"title\": \"Entity Not Found\","
+            +  "\"detail\": \"Interest Running Not Found.\","
+            +  "\"source\": \"com.keenvil.ResidentsController\","
+            +  "\"module\": \"security-api\","
+            +  "\"uri\": \"/security/residents/1/interests\","
+            +  "\"httpMethod\": \"PUT\","
+            +  "\"hostName\": \"api.qa.myaws.io\","
+            +  "\"localHostName\": \"172.17.0.5\""
+            + "}"
+            + "]";
+        return new ByteArrayInputStream(json.getBytes());
+      }
+    };
+    Map<String, Collection<String>> map = Collections.EMPTY_MAP;
+    Response response = Response.create(422, null, map, mockBody);
+    
+    try {
+      throw decoder.decode("key", response);
+    } catch (InvalidResourceState exception) {
+      assertThat(exception.getPlatformErrors().size(), is(1));
+      PlatformError error = exception.getPlatformErrors().get(0);
+      assertThat(error.getHttpStatus(), is(404));
+    }
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
+  public void decodeUnknown() throws Exception {
+    Map<String, Collection<String>> map = Collections.EMPTY_MAP;
+    Response response = Response.create(999, null, map, mockBody);
+    
+    try {
+      throw decoder.decode("key", response);
+    } catch (RuntimeException exception) {
+      assertThat(exception.getMessage(),
+          is("Unknown status code."
+              + " Calling method key with status code 999 and response data."));
+    }
+  }
+  
+  @Test
+  @SuppressWarnings("unchecked")
+  public void decodeNullBody() throws Exception {
+    Map<String, Collection<String>> map = Collections.EMPTY_MAP;
+    Response response = Response.create(999, null, map, (Body) null);
+    
+    try {
+      throw decoder.decode("key", response);
+    } catch (RuntimeException exception) {
+      assertThat(exception.getMessage(),
+          is("Unknown status code."
+              + " Calling method key with status code 999 and response null."));
+    }
+  }
+}

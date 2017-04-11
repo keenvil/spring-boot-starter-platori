@@ -1,0 +1,110 @@
+package com.keenvil.platori.domain;
+
+import static java.lang.String.format;
+import static org.slf4j.LoggerFactory.getLogger;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.springframework.http.HttpStatus;
+
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.keenvil.core.error.KeenvilApiException;
+import com.keenvil.core.error.KeenvilApiException.Authorization;
+import com.keenvil.core.error.KeenvilApiException.Forbidden;
+import com.keenvil.core.error.KeenvilApiException.InvalidResourceState;
+import com.keenvil.core.error.KeenvilApiException.ResourceNotFound;
+import com.keenvil.core.error.PlatformError;
+
+import feign.Response;
+import feign.Response.Body;
+import feign.codec.ErrorDecoder;
+
+/**
+ * Platori Error decoder for Keenvil Feign clients.
+ * 
+ * <p>Decodes {@link HttpStatus} error codes raised by internal Keenvil api
+ * calls and returns its Keenvil api Exception counterpart.</p>
+ * 
+ * <p>Current handled {@link HttpStatus} are:
+ * <ul>
+ * <li>{@link HttpStatus#UNAUTHORIZED},</li>
+ * <li>{@link HttpStatus#FORBIDDEN},</li>
+ * <li>{@link HttpStatus#NOT_FOUND},</li>
+ * <li>{@link HttpStatus#CONFLICT},</li>
+ * <li>{@link HttpStatus#UNPROCESSABLE_ENTITY}.</li>
+ * </ul>
+ * Any other status will return a {@link RuntimeException}.
+ * </p>
+ */
+public class PlatoriErrorDecoder implements ErrorDecoder {
+
+  private static Logger log = getLogger(PlatoriErrorDecoder.class);
+
+  @Override
+  public Exception decode(String methodKey, Response response) {
+    int status = response.status();
+    Body body = response.body();
+
+    String message =
+        format("Calling method %s with status code %s and response %s.",
+            methodKey,
+            status,
+            body);
+
+    log.error(message);
+
+    KeenvilApiException exception = null;
+    if (status == HttpStatus.UNAUTHORIZED.value()) {
+      exception = new Authorization("Authorization error. " + message);
+    } else if (status == HttpStatus.FORBIDDEN.value()) {
+      exception = new Forbidden("Can not grant access to the requested"
+          + " resource. " + message);
+    } else if (status == HttpStatus.NOT_FOUND.value()) {
+      exception = new ResourceNotFound("Resource not found. " + message);
+    } else if (status == HttpStatus.CONFLICT.value()) {
+      exception = new InvalidResourceState("There is a conflict with the"
+          + " current state of the target resource. " + message);
+    } else if (status == HttpStatus.UNPROCESSABLE_ENTITY.value()) {
+      exception = new InvalidResourceState(getPlatformErrors(response));
+    } else {
+      return new RuntimeException("Unknown status code. " + message);
+    }
+    return exception;
+  }
+
+  private List<PlatformError> getPlatformErrors(Response response) {
+    List<PlatformError> errors = new ArrayList<>();
+    ObjectMapper mapper = new ObjectMapper();
+    InputStream body = null;
+    try {      
+      body = response.body().asInputStream();
+      errors = Arrays.asList(mapper.readValue(body, PlatformError[].class));
+    } catch (JsonParseException | JsonMappingException exception) {
+      log.error("There was a problem reading Platform Errors {}.",
+          exception.getMessage());
+      throw new RuntimeException(exception);
+    } catch (IOException exception) {
+      log.error("There was a problem reading response body {}.",
+          exception.getMessage());
+      throw new RuntimeException(exception);
+    } finally {
+      try {
+        if (body != null) {
+          body.close();          
+        }
+      } catch (IOException exception) {
+        log.error("There was a problem closing body input stream {}.",
+            exception.getMessage());
+        throw new RuntimeException(exception);
+      }
+    }
+    return errors;
+  }
+}
