@@ -16,7 +16,7 @@
 
     <spring-boot.version>1.4.0.RELEASE</spring-boot.version>
     <feign-starter.version>1.1.6.RELEASE</feign-starter.version>
-    <keenvil.version>1.0.0-SNAPSHOT</keenvil.version>    
+    <keenvil-cork-starter.version>1.0.0-SNAPSHOT</keenvil-cork-starter.version>    
 	</properties>
 
   <dependencyManagement>
@@ -55,8 +55,8 @@
     <!-- Keenvil -->
     <dependency>
       <groupId>com.keenvil</groupId>
-      <artifactId>keenvil-spring-boot-starter</artifactId>
-      <version>${keenvil.version}</version>
+      <artifactId>spring-boot-starter-cork</artifactId>
+      <version>${keenvil-cork-starter.version}</version>
     </dependency>
 
 		<dependency>
