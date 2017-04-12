@@ -15,12 +15,12 @@ import org.springframework.http.HttpStatus;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.keenvil.core.error.KeenvilApiException;
-import com.keenvil.core.error.KeenvilApiException.Authorization;
-import com.keenvil.core.error.KeenvilApiException.Forbidden;
-import com.keenvil.core.error.KeenvilApiException.InvalidResourceState;
-import com.keenvil.core.error.KeenvilApiException.ResourceNotFound;
-import com.keenvil.core.error.PlatformError;
+import com.keenvil.cork.error.KeenvilApiError;
+import com.keenvil.cork.error.KeenvilApiException;
+import com.keenvil.cork.error.KeenvilApiException.Authorization;
+import com.keenvil.cork.error.KeenvilApiException.Forbidden;
+import com.keenvil.cork.error.KeenvilApiException.InvalidResourceState;
+import com.keenvil.cork.error.KeenvilApiException.ResourceNotFound;
 
 import feign.Response;
 import feign.Response.Body;
@@ -72,20 +72,20 @@ public class PlatoriErrorDecoder implements ErrorDecoder {
       exception = new InvalidResourceState("There is a conflict with the"
           + " current state of the target resource. " + message);
     } else if (status == HttpStatus.UNPROCESSABLE_ENTITY.value()) {
-      exception = new InvalidResourceState(getPlatformErrors(response));
+      exception = new InvalidResourceState(getErrors(response));
     } else {
       return new RuntimeException("Unknown status code. " + message);
     }
     return exception;
   }
 
-  private List<PlatformError> getPlatformErrors(Response response) {
-    List<PlatformError> errors = new ArrayList<>();
+  private List<KeenvilApiError> getErrors(Response response) {
+    List<KeenvilApiError> errors = new ArrayList<>();
     ObjectMapper mapper = new ObjectMapper();
     InputStream body = null;
     try {      
       body = response.body().asInputStream();
-      errors = Arrays.asList(mapper.readValue(body, PlatformError[].class));
+      errors = Arrays.asList(mapper.readValue(body, KeenvilApiError[].class));
     } catch (JsonParseException | JsonMappingException exception) {
       log.error("There was a problem reading Platform Errors {}.",
           exception.getMessage());

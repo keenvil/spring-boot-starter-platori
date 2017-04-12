@@ -14,11 +14,11 @@ import java.util.Map;
 import org.easymock.TestSubject;
 import org.junit.Test;
 
-import com.keenvil.core.error.KeenvilApiException.Authorization;
-import com.keenvil.core.error.KeenvilApiException.Forbidden;
-import com.keenvil.core.error.KeenvilApiException.InvalidResourceState;
-import com.keenvil.core.error.KeenvilApiException.ResourceNotFound;
-import com.keenvil.core.error.PlatformError;
+import com.keenvil.cork.error.KeenvilApiError;
+import com.keenvil.cork.error.KeenvilApiException.Authorization;
+import com.keenvil.cork.error.KeenvilApiException.Forbidden;
+import com.keenvil.cork.error.KeenvilApiException.InvalidResourceState;
+import com.keenvil.cork.error.KeenvilApiException.ResourceNotFound;
 
 import feign.Response;
 import feign.Response.Body;
@@ -152,8 +152,8 @@ public class PlatoriErrorDecoderTest {
     try {
       throw decoder.decode("key", response);
     } catch (InvalidResourceState exception) {
-      assertThat(exception.getPlatformErrors().size(), is(1));
-      PlatformError error = exception.getPlatformErrors().get(0);
+      assertThat(exception.getErrors().size(), is(1));
+      KeenvilApiError error = exception.getErrors().get(0);
       assertThat(error.getHttpStatus(), is(404));
     }
   }
