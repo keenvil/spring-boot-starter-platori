@@ -72,7 +72,7 @@ public class PlatoriErrorDecoder implements ErrorDecoder {
     } else if (status == HttpStatus.NOT_FOUND.value()) {
       exception = new ResourceNotFound("Resource not found. " + message);
     } else if (status == HttpStatus.CONFLICT.value()) {
-      exception = new ResourceAlreadyExists("There is a conflict with the"
+      exception = new InvalidResourceState("There is a conflict with the"
           + " current state of the target resource. " + message);
     } else if (status == HttpStatus.UNPROCESSABLE_ENTITY.value()) {
       exception = new InvalidResourceState(getErrors(response));
