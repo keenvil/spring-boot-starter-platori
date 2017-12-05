@@ -11,6 +11,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 
+import com.keenvil.cork.error.KeenvilApiException;
 import org.easymock.TestSubject;
 import org.junit.Test;
 
@@ -115,7 +116,7 @@ public class PlatoriErrorDecoderTest {
     
     try {
       throw decoder.decode("key", response);
-    } catch (InvalidResourceState exception) {
+    } catch (KeenvilApiException.ResourceAlreadyExists exception) {
       assertThat(exception.getMessage(),
           is("There is a conflict with the current state of the target"
               + " resource. Calling method key with status code 409 and"
