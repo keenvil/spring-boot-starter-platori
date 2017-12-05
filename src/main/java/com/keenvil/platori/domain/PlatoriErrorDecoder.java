@@ -38,6 +38,7 @@ import feign.codec.ErrorDecoder;
  * <li>{@link HttpStatus#FORBIDDEN},</li>
  * <li>{@link HttpStatus#NOT_FOUND},</li>
  * <li>{@link HttpStatus#CONFLICT},</li>
+ * <li>{@link HttpStatus#PRECONDITION_FAILED},</li>
  * <li>{@link HttpStatus#UNPROCESSABLE_ENTITY}.</li>
  * </ul>
  * Any other status will return a {@link RuntimeException}.
@@ -68,7 +69,8 @@ public class PlatoriErrorDecoder implements ErrorDecoder {
           + " resource. " + message);
     } else if (status == HttpStatus.NOT_FOUND.value()) {
       exception = new ResourceNotFound("Resource not found. " + message);
-    } else if (status == HttpStatus.CONFLICT.value()) {
+    } else if (status == HttpStatus.CONFLICT.value()
+        || status == HttpStatus.PRECONDITION_FAILED.value()) {
       exception = new InvalidResourceState("There is a conflict with the"
           + " current state of the target resource. " + message);
     } else if (status == HttpStatus.UNPROCESSABLE_ENTITY.value()) {
