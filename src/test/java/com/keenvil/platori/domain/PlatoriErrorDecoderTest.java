@@ -112,7 +112,7 @@ public class PlatoriErrorDecoderTest {
   public void decodeConflict() throws Exception {
     Map<String, Collection<String>> map = Collections.EMPTY_MAP;
     Response response = Response.create(409, null, map, mockBody);
-    
+
     try {
       throw decoder.decode("key", response);
     } catch (InvalidResourceState exception) {

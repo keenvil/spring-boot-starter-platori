@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import com.keenvil.cork.error.KeenvilBusinessException;
 import org.slf4j.Logger;
 import org.springframework.http.HttpStatus;
 
@@ -21,6 +22,7 @@ import com.keenvil.cork.error.KeenvilApiException.Authorization;
 import com.keenvil.cork.error.KeenvilApiException.Forbidden;
 import com.keenvil.cork.error.KeenvilApiException.InvalidResourceState;
 import com.keenvil.cork.error.KeenvilApiException.ResourceNotFound;
+import com.keenvil.cork.error.KeenvilApiException.ResourceAlreadyExists;
 
 import feign.Response;
 import feign.Response.Body;
@@ -28,16 +30,17 @@ import feign.codec.ErrorDecoder;
 
 /**
  * Platori Error decoder for Keenvil Feign clients.
- * 
+ * <p>
  * <p>Decodes {@link HttpStatus} error codes raised by internal Keenvil api
  * calls and returns its Keenvil api Exception counterpart.</p>
- * 
+ * <p>
  * <p>Current handled {@link HttpStatus} are:
  * <ul>
  * <li>{@link HttpStatus#UNAUTHORIZED},</li>
  * <li>{@link HttpStatus#FORBIDDEN},</li>
  * <li>{@link HttpStatus#NOT_FOUND},</li>
  * <li>{@link HttpStatus#CONFLICT},</li>
+ * <li>{@link HttpStatus#PRECONDITION_FAILED},</li>
  * <li>{@link HttpStatus#UNPROCESSABLE_ENTITY}.</li>
  * </ul>
  * Any other status will return a {@link RuntimeException}.
@@ -73,6 +76,8 @@ public class PlatoriErrorDecoder implements ErrorDecoder {
           + " current state of the target resource. " + message);
     } else if (status == HttpStatus.UNPROCESSABLE_ENTITY.value()) {
       exception = new InvalidResourceState(getErrors(response));
+    } else if (status == HttpStatus.PRECONDITION_FAILED.value()) {
+      exception = new InvalidResourceState("Invalid Resource State. " + message);
     } else {
       return new RuntimeException("Unknown status code. " + message);
     }
@@ -83,7 +88,7 @@ public class PlatoriErrorDecoder implements ErrorDecoder {
     List<KeenvilApiError> errors = new ArrayList<>();
     ObjectMapper mapper = new ObjectMapper();
     InputStream body = null;
-    try {      
+    try {
       body = response.body().asInputStream();
       errors = Arrays.asList(mapper.readValue(body, KeenvilApiError[].class));
     } catch (JsonParseException | JsonMappingException exception) {
@@ -97,7 +102,7 @@ public class PlatoriErrorDecoder implements ErrorDecoder {
     } finally {
       try {
         if (body != null) {
-          body.close();          
+          body.close();
         }
       } catch (IOException exception) {
         log.error("There was a problem closing body input stream {}.",
