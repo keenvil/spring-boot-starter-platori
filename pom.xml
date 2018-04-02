@@ -16,7 +16,7 @@
 
     <spring-boot.version>1.4.0.RELEASE</spring-boot.version>
     <feign-starter.version>1.1.6.RELEASE</feign-starter.version>
-    <keenvil-cork-starter.version>1.0.0-SNAPSHOT</keenvil-cork-starter.version>    
+    <keenvil-cork-starter.version>1.0.1-SNAPSHOT</keenvil-cork-starter.version>
 	</properties>
 
   <dependencyManagement>

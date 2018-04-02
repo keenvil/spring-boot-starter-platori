@@ -5,11 +5,16 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import com.google.common.reflect.TypeToken;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.keenvil.cork.error.KeenvilBusinessException;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.springframework.http.HttpStatus;
 
@@ -54,7 +59,8 @@ public class PlatoriErrorDecoder implements ErrorDecoder {
   public Exception decode(String methodKey, Response response) {
     int status = response.status();
     Body body = response.body();
-
+    List<ErrorDto> errorDto = new ArrayList<>();
+  
     String message =
         format("Calling method %s with status code %s and response %s.",
             methodKey,
@@ -62,7 +68,14 @@ public class PlatoriErrorDecoder implements ErrorDecoder {
             body);
 
     log.error(message);
-
+  
+    try {
+      Type listType = new TypeToken<List<ErrorDto>>() { }.getType();
+      errorDto = new Gson().fromJson(body.toString(), listType);
+    }catch (Exception e) {
+      log.error("can not convert the response to a json", e.getMessage());
+    }
+    
     KeenvilApiException exception = null;
     if (status == HttpStatus.UNAUTHORIZED.value()) {
       exception = new Authorization("Authorization error. " + message);
@@ -70,7 +83,13 @@ public class PlatoriErrorDecoder implements ErrorDecoder {
       exception = new Forbidden("Can not grant access to the requested"
           + " resource. " + message);
     } else if (status == HttpStatus.NOT_FOUND.value()) {
-      exception = new ResourceNotFound("Resource not found. " + message);
+      String code = "resourceNotFound";
+      if (errorDto != null
+          && !errorDto.isEmpty()
+          && StringUtils.isNotEmpty(errorDto.get(0).getCode())) {
+        code = errorDto.get(0).getCode();
+      }
+      exception = new ResourceNotFound("Resource not found. " + message, code);
     } else if (status == HttpStatus.CONFLICT.value()) {
       exception = new InvalidResourceState("There is a conflict with the"
           + " current state of the target resource. " + message);
