@@ -60,6 +60,7 @@ public class PlatoriErrorDecoder implements ErrorDecoder {
     int status = response.status();
     Body body = response.body();
     List<ErrorDto> errorDto = new ArrayList<>();
+    String code = "";
   
     String message =
         format("Calling method %s with status code %s and response %s.",
@@ -75,28 +76,43 @@ public class PlatoriErrorDecoder implements ErrorDecoder {
     }catch (Exception e) {
       log.error("can not convert the response to a json", e.getMessage());
     }
+  
+    if (errorDto != null
+        && !errorDto.isEmpty()
+        && StringUtils.isNotEmpty(errorDto.get(0).getCode())) {
+      code = errorDto.get(0).getCode();
+    }
     
     KeenvilApiException exception = null;
     if (status == HttpStatus.UNAUTHORIZED.value()) {
-      exception = new Authorization("Authorization error. " + message);
+      if (StringUtils.isEmpty(code)) {
+        code = "unauthorized";
+      }
+      exception = new Authorization("Authorization error. " + message, code);
     } else if (status == HttpStatus.FORBIDDEN.value()) {
+      if (StringUtils.isEmpty(code)) {
+        code = "forbidden";
+      }
       exception = new Forbidden("Can not grant access to the requested"
-          + " resource. " + message);
+          + " resource. " + message, code);
     } else if (status == HttpStatus.NOT_FOUND.value()) {
-      String code = "resourceNotFound";
-      if (errorDto != null
-          && !errorDto.isEmpty()
-          && StringUtils.isNotEmpty(errorDto.get(0).getCode())) {
-        code = errorDto.get(0).getCode();
+      if (StringUtils.isEmpty(code)) {
+        code = "resourceNotFound";
       }
       exception = new ResourceNotFound("Resource not found. " + message, code);
     } else if (status == HttpStatus.CONFLICT.value()) {
+      if (StringUtils.isEmpty(code)) {
+        code = "invalidResourceState";
+      }
       exception = new InvalidResourceState("There is a conflict with the"
-          + " current state of the target resource. " + message);
+          + " current state of the target resource. " + message, code);
     } else if (status == HttpStatus.UNPROCESSABLE_ENTITY.value()) {
       exception = new InvalidResourceState(getErrors(response));
     } else if (status == HttpStatus.PRECONDITION_FAILED.value()) {
-      exception = new InvalidResourceState("Invalid Resource State. " + message);
+      if (StringUtils.isEmpty(code)) {
+        code = "invalidResourceState";
+      }
+      exception = new InvalidResourceState("Invalid Resource State. " + message, code);
     } else {
       return new RuntimeException("Unknown status code. " + message);
     }
