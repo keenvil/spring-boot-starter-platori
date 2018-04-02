@@ -1,9 +1,13 @@
 package com.keenvil.platori.domain;
 
 public class ErrorDto {
+  
   private int httpStatus;
+  
   private String code;
+  
   private String title;
+  
   private String detail;
   
   public ErrorDto() {
