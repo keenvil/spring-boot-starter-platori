@@ -1,6 +1,5 @@
 package com.keenvil.platori.domain;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import static java.lang.String.format;
 import static org.slf4j.LoggerFactory.getLogger;
 
