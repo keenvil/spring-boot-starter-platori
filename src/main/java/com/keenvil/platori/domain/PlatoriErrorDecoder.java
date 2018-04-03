@@ -1,6 +1,5 @@
 package com.keenvil.platori.domain;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import static java.lang.String.format;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -54,7 +53,6 @@ public class PlatoriErrorDecoder implements ErrorDecoder {
   public Exception decode(String methodKey, Response response) {
     int status = response.status();
     Body body = response.body();
-    List<ErrorDto> errorDto = new ArrayList<>();
     String code = "";
   
     String message =
@@ -64,14 +62,7 @@ public class PlatoriErrorDecoder implements ErrorDecoder {
             body);
 
     log.error(message);
-  
-    try {
-      JsonNode jsonNode = new ObjectMapper().readTree(body.toString());
-      code = jsonNode.get(0).get("code").asText();
-    } catch (Exception e) {
-      log.error("can not convert the response to a json", e.getMessage());
-    }
-    
+
     KeenvilApiException exception = null;
     if (status == HttpStatus.UNAUTHORIZED.value()) {
       if (StringUtils.isEmpty(code)) {
