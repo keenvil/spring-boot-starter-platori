@@ -5,6 +5,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -18,6 +19,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.keenvil.cork.error.KeenvilApiError;
 import com.keenvil.cork.error.KeenvilApiException;
+import com.keenvil.cork.error.KeenvilBusinessException;
 import com.keenvil.cork.error.KeenvilApiException.Authorization;
 import com.keenvil.cork.error.KeenvilApiException.Forbidden;
 import com.keenvil.cork.error.KeenvilApiException.InvalidResourceState;
@@ -62,7 +64,20 @@ public class PlatoriErrorDecoder implements ErrorDecoder {
             body);
 
     log.error(message);
-
+  
+    try {
+      Type listType = new TypeToken<List<ErrorDto>>() { }.getType();
+      errorDto = new Gson().fromJson(body.toString(), listType);
+    }catch (Exception e) {
+      log.error("can not convert the response to a json", e.getMessage());
+    }
+  
+    if (errorDto != null
+        && !errorDto.isEmpty()
+        && StringUtils.isNotEmpty(errorDto.get(0).getCode())) {
+      code = errorDto.get(0).getCode();
+    }
+    
     KeenvilApiException exception = null;
     if (status == HttpStatus.UNAUTHORIZED.value()) {
       if (StringUtils.isEmpty(code)) {
