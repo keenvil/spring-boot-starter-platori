@@ -64,19 +64,6 @@ public class PlatoriErrorDecoder implements ErrorDecoder {
             body);
 
     log.error(message);
-  
-    try {
-      Type listType = new TypeToken<List<ErrorDto>>() { }.getType();
-      errorDto = new Gson().fromJson(body.toString(), listType);
-    }catch (Exception e) {
-      log.error("can not convert the response to a json", e.getMessage());
-    }
-  
-    if (errorDto != null
-        && !errorDto.isEmpty()
-        && StringUtils.isNotEmpty(errorDto.get(0).getCode())) {
-      code = errorDto.get(0).getCode();
-    }
     
     KeenvilApiException exception = null;
     if (status == HttpStatus.UNAUTHORIZED.value()) {
