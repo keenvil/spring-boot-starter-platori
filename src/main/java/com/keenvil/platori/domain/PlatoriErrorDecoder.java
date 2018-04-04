@@ -10,9 +10,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import com.google.common.reflect.TypeToken;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.springframework.http.HttpStatus;
@@ -27,7 +24,6 @@ import com.keenvil.cork.error.KeenvilApiException.Authorization;
 import com.keenvil.cork.error.KeenvilApiException.Forbidden;
 import com.keenvil.cork.error.KeenvilApiException.InvalidResourceState;
 import com.keenvil.cork.error.KeenvilApiException.ResourceNotFound;
-import com.keenvil.cork.error.KeenvilApiException.ResourceAlreadyExists;
 
 import feign.Response;
 import feign.Response.Body;
@@ -59,7 +55,6 @@ public class PlatoriErrorDecoder implements ErrorDecoder {
   public Exception decode(String methodKey, Response response) {
     int status = response.status();
     Body body = response.body();
-    List<ErrorDto> errorDto = new ArrayList<>();
     String code = "";
   
     String message =
@@ -69,19 +64,6 @@ public class PlatoriErrorDecoder implements ErrorDecoder {
             body);
 
     log.error(message);
-  
-    try {
-      Type listType = new TypeToken<List<ErrorDto>>() { }.getType();
-      errorDto = new Gson().fromJson(body.toString(), listType);
-    }catch (Exception e) {
-      log.error("can not convert the response to a json", e.getMessage());
-    }
-  
-    if (errorDto != null
-        && !errorDto.isEmpty()
-        && StringUtils.isNotEmpty(errorDto.get(0).getCode())) {
-      code = errorDto.get(0).getCode();
-    }
     
     KeenvilApiException exception = null;
     if (status == HttpStatus.UNAUTHORIZED.value()) {
