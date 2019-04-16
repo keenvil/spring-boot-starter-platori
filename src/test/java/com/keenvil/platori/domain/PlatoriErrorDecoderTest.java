@@ -1,12 +1,15 @@
 package com.keenvil.platori.domain;
 
+import static feign.Request.HttpMethod.*;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
+import feign.Request;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
+import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
@@ -53,7 +56,12 @@ public class PlatoriErrorDecoderTest {
     public Reader asReader() throws IOException {
       return null;
     }
-    
+
+    @Override
+    public Reader asReader(Charset charset) throws IOException {
+      return null;
+    }
+
     @Override
     public String toString() {
       return "data";
@@ -66,7 +74,8 @@ public class PlatoriErrorDecoderTest {
   @SuppressWarnings("unchecked")
   public void decodeUnauthorized() throws Exception {
     Map<String, Collection<String>> map = Collections.EMPTY_MAP;
-    Response response = Response.create(401, null, map, mockBody);
+    Request request = Request.create(GET, "uri", map, Request.Body.empty());
+    Response response = Response.builder().body(mockBody).headers(map).status(401).reason("").request(request).build();
     
     try {
       throw decoder.decode("key", response);
@@ -81,7 +90,8 @@ public class PlatoriErrorDecoderTest {
   @SuppressWarnings("unchecked")
   public void decodForbidden() throws Exception {
     Map<String, Collection<String>> map = Collections.EMPTY_MAP;
-    Response response = Response.create(403, null, map, mockBody);
+    Request request = Request.create(GET, "uri", map, Request.Body.empty());
+    Response response = Response.builder().body(mockBody).headers(map).status(403).reason("").request(request).build();
     
     try {
       throw decoder.decode("key", response);
@@ -96,8 +106,8 @@ public class PlatoriErrorDecoderTest {
   @SuppressWarnings("unchecked")
   public void decode404() throws Exception {
     Map<String, Collection<String>> map = Collections.EMPTY_MAP;
-    Response response = Response.create(404, null, map, mockBody);
-    
+    Request request = Request.create(GET, "uri", map, Request.Body.empty());
+    Response response = Response.builder().body(mockBody).headers(map).status(404).reason("").request(request).build();
     try {
       throw decoder.decode("key", response);
     } catch (ResourceNotFound exception) {
@@ -111,8 +121,8 @@ public class PlatoriErrorDecoderTest {
   @SuppressWarnings("unchecked")
   public void decodeConflict() throws Exception {
     Map<String, Collection<String>> map = Collections.EMPTY_MAP;
-    Response response = Response.create(409, null, map, mockBody);
-
+    Request request = Request.create(GET, "uri", map, Request.Body.empty());
+    Response response = Response.builder().body(mockBody).headers(map).status(409).reason("").request(request).build();
     try {
       throw decoder.decode("key", response);
     } catch (InvalidResourceState exception) {
@@ -147,8 +157,8 @@ public class PlatoriErrorDecoderTest {
       }
     };
     Map<String, Collection<String>> map = Collections.EMPTY_MAP;
-    Response response = Response.create(422, null, map, mockBody);
-    
+    Request request = Request.create(GET, "uri", map, Request.Body.empty());
+    Response response = Response.builder().body(mockBody).headers(map).status(422).reason("").request(request).build();
     try {
       throw decoder.decode("key", response);
     } catch (InvalidResourceState exception) {
@@ -162,8 +172,8 @@ public class PlatoriErrorDecoderTest {
   @SuppressWarnings("unchecked")
   public void decodeUnknown() throws Exception {
     Map<String, Collection<String>> map = Collections.EMPTY_MAP;
-    Response response = Response.create(999, null, map, mockBody);
-    
+    Request request = Request.create(GET, "uri", map, Request.Body.empty());
+    Response response = Response.builder().body(mockBody).headers(map).status(999).reason("").request(request).build();
     try {
       throw decoder.decode("key", response);
     } catch (RuntimeException exception) {
@@ -177,8 +187,9 @@ public class PlatoriErrorDecoderTest {
   @SuppressWarnings("unchecked")
   public void decodeNullBody() throws Exception {
     Map<String, Collection<String>> map = Collections.EMPTY_MAP;
-    Response response = Response.create(999, null, map, (Body) null);
-    
+    Request request = Request.create(GET, "uri", map, Request.Body.empty());
+    Response response = Response.builder().body((Body) null).headers(map).status(999).reason("").request(request).build();
+
     try {
       throw decoder.decode("key", response);
     } catch (RuntimeException exception) {
