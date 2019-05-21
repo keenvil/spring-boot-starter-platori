@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.springframework.http.HttpStatus;
@@ -56,7 +58,15 @@ public class PlatoriErrorDecoder implements ErrorDecoder {
     int status = response.status();
     Body body = response.body();
     String code = "";
-  
+
+    if (body != null) {
+      Pattern pattern = Pattern.compile("(?:\"code\":\")(.*?)(?:\")");
+      Matcher matcher = pattern.matcher(response.body().toString().replace("\\", ""));
+      if (matcher.find()) {
+        code = matcher.group(1);
+      }
+    }
+
     String message =
         format("Calling method %s with status code %s and response %s.",
             methodKey,
