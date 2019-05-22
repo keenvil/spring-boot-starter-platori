@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
@@ -33,6 +34,8 @@ public class PlatoriErrorDecoderTest {
 
   private class MockBody implements Body {
 
+    private InputStream inputStream = null;
+
     @Override
     public void close() throws IOException {
     }
@@ -49,7 +52,11 @@ public class PlatoriErrorDecoderTest {
 
     @Override
     public InputStream asInputStream() throws IOException {
-      return null;
+      return inputStream;
+    }
+
+    public void setInputStream(InputStream inputStream) {
+      this.inputStream = inputStream;
     }
 
     @Override
@@ -99,6 +106,40 @@ public class PlatoriErrorDecoderTest {
       assertThat(exception.getMessage(),
           is("Can not grant access to the requested resource."
               + " Calling method key with status code 403 and response data."));
+    }
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
+  public void decodeInputStreamBody() throws Exception {
+    InputStream stream = new ByteArrayInputStream("\"Can not grant access to the requested resource. Calling method SecurityApiClient#canAccessWithId(Object,String) with status code 403 and response [{\\\\\\\"httpStatus\\\\\\\":403,\\\\\\\"code\\\\\\\":\\\\\\\"access.not.valid\\\\\\\",\\\\\\\"title\\\\\\\":\\\\\\\"Forbidden\\\\\\\",\\\\\\\"detail\\\\\\\":\\\\\\\"Invalid PIN [1b23c263565dc9d5f7187d09fe7a1eae] for account [352] in community [santacatalina]\\\\\\\",\\\\\\\"source\\\\\\\":\\\\\\\"com.keenvil.security.controller.ResidentCommunityAccessController:authorize:339(ResidentCommunityAccessController.java) com.keenvil.security.controller.ResidentCommunityAccessController:validateByPersonalId:257(ResidentCommunityAccessController.java) com.keenvil.security.controller.ResidentCommunityAccessController$$FastClassBySpringCGLIB$$d2c48ed0:invoke:-1(<generated>) org.springframework.cglib.proxy.MethodProxy:invoke:218(MethodProxy.java) org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation:invokeJoinpoint:749(CglibAopProxy.java) org.springframework.aop.framework.ReflectiveMethodInvocation:proceed:163(ReflectiveMethodInvocation.java) org.springframework.transaction.interceptor.TransactionAspectSupport:invokeWithinTransaction:294(TransactionAspectSupport.java) org.springframework.transaction.interceptor.TransactionInterceptor:invoke:98(TransactionInterceptor.java) org.springframework.aop.framework.ReflectiveMethodInvocation:proceed:186(ReflectiveMethodInvocation.java) org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor:intercept:688(CglibAopProxy.java) \\\\\\\",\\\\\\\"module\\\\\\\":\\\\\\\"keenvil/security\\\\\\\",\\\\\\\"uri\\\\\\\":\\\\\\\"/security/c/santacatalina/access/residents\\\\\\\",\\\\\\\"httpMethod\\\\\\\":\\\\\\\"POST\\\\\\\",\\\\\\\"hostName\\\\\\\":\\\\\\\"localhost\\\\\\\",\\\\\\\"localHostName\\\\\\\":\\\\\\\"127.0.0.1\\\\\\\"}].\"".getBytes(StandardCharsets.UTF_8));
+
+    MockBody body = new MockBody();
+    body.setInputStream(stream);
+    Map<String, Collection<String>> map = Collections.EMPTY_MAP;
+    Request request = Request.create(GET, "uri", map, Request.Body.empty());
+    Response response = Response.builder().body(body).headers(map).status(403).reason("").request(request).build();
+    try {
+      throw decoder.decode("key", response);
+    } catch (Forbidden exception) {
+      assertThat(exception.getCode(),
+          is("access.not.valid"));
+    }
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
+  public void decodeInputStreamBody_isNull() throws Exception {
+    MockBody body = new MockBody();
+    body.setInputStream(null);
+    Map<String, Collection<String>> map = Collections.EMPTY_MAP;
+    Request request = Request.create(GET, "uri", map, Request.Body.empty());
+    Response response = Response.builder().body(body).headers(map).status(403).reason("").request(request).build();
+    try {
+      throw decoder.decode("key", response);
+    } catch (Forbidden exception) {
+      assertThat(exception.getCode(),
+          is("forbidden"));
     }
   }
 

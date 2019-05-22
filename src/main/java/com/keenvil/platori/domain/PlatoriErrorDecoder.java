@@ -5,13 +5,13 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.springframework.http.HttpStatus;
@@ -21,7 +21,6 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.keenvil.cork.error.KeenvilApiError;
 import com.keenvil.cork.error.KeenvilApiException;
-import com.keenvil.cork.error.KeenvilBusinessException;
 import com.keenvil.cork.error.KeenvilApiException.Authorization;
 import com.keenvil.cork.error.KeenvilApiException.Forbidden;
 import com.keenvil.cork.error.KeenvilApiException.InvalidResourceState;
@@ -61,7 +60,8 @@ public class PlatoriErrorDecoder implements ErrorDecoder {
 
     if (body != null) {
       Pattern pattern = Pattern.compile("(?:\"code\":\")(.*?)(?:\")");
-      Matcher matcher = pattern.matcher(response.body().toString().replace("\\", ""));
+      String bodyString = convert(response.body());
+      Matcher matcher = pattern.matcher(bodyString.replace("\\", ""));
       if (matcher.find()) {
         code = matcher.group(1);
       }
@@ -138,5 +138,17 @@ public class PlatoriErrorDecoder implements ErrorDecoder {
       }
     }
     return errors;
+  }
+
+  private String convert(Response.Body body) {
+    try {
+      InputStream inputStream = body.asInputStream();
+      if (inputStream != null) {
+        return IOUtils.toString(inputStream);
+      }
+    } catch (IOException e) {
+      log.error("the error can't not be deserialized");
+    }
+    return "";
   }
 }
