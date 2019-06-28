@@ -1,5 +1,9 @@
 package com.keenvil.platori;
 
+import com.keenvil.platori.domain.RetryerPolicy;
+import feign.RetryableException;
+import feign.Retryer;
+import feign.Retryer.Default;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,7 +17,7 @@ import feign.codec.ErrorDecoder;
 
 /**
  * Feign Client configuration exposed by Platori.
- * 
+ *
  * <p>Platori exposes:
  * <ul>
  * <li>Feign log level, default is BASIC.</li>
@@ -34,6 +38,11 @@ public class PlatoriFeignConfiguration {
   @Value("${keenvil.platori.feign.options.read-timeout:5000}")
   private int readTimeout;
 
+  @Value("${keenvil.platori.feign.options.maxAttempts:3}")
+  private int maxAttempts;
+  @Value("${keenvil.platori.feign.options.backoff:500}")
+  private long backoff;
+
   @Bean
   public Logger.Level feignLoggerLevel() {
     return level;
@@ -47,5 +56,10 @@ public class PlatoriFeignConfiguration {
   @Bean
   public ErrorDecoder platoriErrorDecoder() {
     return new PlatoriErrorDecoder();
+  }
+
+  @Bean
+  public Retryer retryer() {
+    return new RetryerPolicy(maxAttempts, backoff);
   }
 }
