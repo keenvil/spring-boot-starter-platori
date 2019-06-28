@@ -15,6 +15,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 
+import java.util.concurrent.TimeUnit;
 import org.easymock.TestSubject;
 import org.junit.Test;
 
@@ -253,5 +254,11 @@ public class PlatoriErrorDecoderTest {
           is("Unknown status code."
               + " Calling method key with status code 999 and response null."));
     }
+  }
+
+  @Test
+  public void  lflf () {
+    System.out.println("444"+TimeUnit.SECONDS.toMillis(1L));
+    System.out.println("343"+TimeUnit.SECONDS.toMillis(100L));
   }
 }
