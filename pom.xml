@@ -81,7 +81,7 @@
 			<scope>test</scope>
 		</dependency>
 
-    <!-- Los tests usan org.junit.Rule/ExpectedException/Assert (JUnit 4) --
+    <!-- Los tests usan org.junit.Rule/ExpectedException/Assert (JUnit 4).
          spring-boot-starter-test en Spring Boot 3 solo trae JUnit 5 por defecto. -->
     <dependency>
       <groupId>junit</groupId>
