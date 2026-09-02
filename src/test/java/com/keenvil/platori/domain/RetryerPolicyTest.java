@@ -2,6 +2,8 @@ package com.keenvil.platori.domain;
 
 import static org.junit.Assert.*;
 
+import feign.Request;
+import feign.Request.HttpMethod;
 import feign.RetryableException;
 import org.junit.Rule;
 import org.junit.Test;
@@ -15,7 +17,7 @@ public class RetryerPolicyTest {
   @Test
   public void create() throws Exception {
 
-    RetryableException e = new RetryableException("", null, null);
+    RetryableException e = new RetryableException(500, "", HttpMethod.GET, (Long) null, (Request) null);
 
     RetryerPolicy retryerPolicy = new RetryerPolicy();
 
@@ -32,7 +34,7 @@ public class RetryerPolicyTest {
   @Test(expected = RetryableException.class)
   public void create_exception() throws Exception {
 
-    RetryableException e = new RetryableException("", null, null);
+    RetryableException e = new RetryableException(500, "", HttpMethod.GET, (Long) null, (Request) null);
 
     RetryerPolicy retryerPolicy = new RetryerPolicy();
 
