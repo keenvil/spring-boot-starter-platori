@@ -91,7 +91,7 @@
     </dependency>
 
     <!-- PlatoriErrorDecoderTest usa @TestSubject de EasyMock (aunque no corre con
-         EasyMockRunner -- el decoder se instancia directo -- la anotacion sola ya
+         EasyMockRunner (el decoder se instancia directo), la anotacion sola ya
          necesita la libreria en el classpath para compilar). -->
     <dependency>
       <groupId>org.easymock</groupId>
