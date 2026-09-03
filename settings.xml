@@ -4,12 +4,15 @@
                       http://maven.apache.org/xsd/settings-1.0.0.xsd">
 
   <servers>
-    <!-- Solo lectura, para resolver spring-boot-starter-cork como dependencia. Mismo
-         mecanismo que usan hoy los demas repos del org (segment-api, dahua-api, etc). -->
+    <!-- Solo lectura, para resolver spring-boot-starter-cork como dependencia. La cuenta
+         de fmonsalvo fue dada de baja de GitHub: su PAT ya no autentica en ningun lado.
+         Mismo mecanismo que ya usan los demas repos del org (segment-api, dahua-api,
+         etc): cork esta publico ahora mismo, asi que cualquier identidad valida de
+         GitHub alcanza para leerlo. -->
     <server>
       <id>cork</id>
-      <username>fmonsalvo</username>
-      <password>a97885612083565d579c28fce1508ca9246c6235</password>
+      <username>${env.GITHUB_ACTOR}</username>
+      <password>${env.GITHUB_TOKEN}</password>
     </server>
     <!-- Publicacion del propio paquete: credenciales via env vars del workflow, no
          hardcodeadas (ver publish.yml). -->
