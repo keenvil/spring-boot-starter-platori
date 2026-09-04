@@ -19,8 +19,36 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
+      - name: Generate settings.xml
+        run: |
+          cat > settings.xml << 'XMLEOF'
+          <settings>
+            <servers>
+              <server>
+                <id>event</id>
+                <username>${env.MAVEN_CI_USERNAME}</username>
+                <password>${env.MAVEN_PACKAGES_TOKEN}</password>
+              </server>
+              <server>
+                <id>cork</id>
+                <username>${env.MAVEN_CI_USERNAME}</username>
+                <password>${env.MAVEN_PACKAGES_TOKEN}</password>
+              </server>
+              <server>
+                <id>platori</id>
+                <username>${env.MAVEN_CI_USERNAME}</username>
+                <password>${env.MAVEN_PACKAGES_TOKEN}</password>
+              </server>
+              <server>
+                <id>parent</id>
+                <username>${env.MAVEN_CI_USERNAME}</username>
+                <password>${env.MAVEN_PACKAGES_TOKEN}</password>
+              </server>
+            </servers>
+          </settings>
+          XMLEOF
       - name: Publish to GitHub Packages
         run: mvn --batch-mode --settings settings.xml deploy -DskipTests -Dcheckstyle.skip=true
         env:
-          GITHUB_ACTOR: ${{ github.actor }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MAVEN_CI_USERNAME: ci-packages
+          MAVEN_PACKAGES_TOKEN: ${{ secrets.MAVEN_PACKAGES_TOKEN }}
