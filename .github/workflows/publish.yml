@@ -2,7 +2,7 @@ name: Publish to GitHub Packages
 
 on:
   push:
-    branches: [ development ]
+    branches: [ develop ]
 
 jobs:
   publish:
