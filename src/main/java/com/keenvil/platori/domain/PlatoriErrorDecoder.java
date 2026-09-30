@@ -73,7 +73,13 @@ public class PlatoriErrorDecoder implements ErrorDecoder {
             status,
             body);
 
-    log.error(message);
+    // 4xx are answers of the called service (not found, forbidden, conflict...) and callers
+    // usually expect and handle them: logging them as ERROR only adds noise. 5xx stay ERROR.
+    if (status >= 400 && status < 500) {
+      log.warn(message);
+    } else {
+      log.error(message);
+    }
     
     KeenvilApiException exception = null;
     if (status == HttpStatus.UNAUTHORIZED.value()) {
