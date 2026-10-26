@@ -16,9 +16,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.springframework.http.HttpStatus;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import com.keenvil.cork.error.KeenvilApiError;
 import com.keenvil.cork.error.KeenvilApiException;
 import com.keenvil.cork.error.KeenvilApiException.Authorization;
@@ -119,12 +119,12 @@ public class PlatoriErrorDecoder implements ErrorDecoder {
 
   private List<KeenvilApiError> getErrors(Response response) {
     List<KeenvilApiError> errors = new ArrayList<>();
-    ObjectMapper mapper = new ObjectMapper();
+    ObjectMapper mapper = JsonMapper.builderWithJackson2Defaults().build();
     InputStream body = null;
     try {
       body = response.body().asInputStream();
       errors = Arrays.asList(mapper.readValue(body, KeenvilApiError[].class));
-    } catch (JsonParseException | JsonMappingException exception) {
+    } catch (JacksonException exception) {
       log.error("There was a problem reading Platform Errors {}.",
           exception.getMessage());
       throw new RuntimeException(exception);
