@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.keenvil</groupId>
 	<artifactId>spring-boot-starter-platori</artifactId>
-	<version>5.0.0-rc.1</version>
+	<version>5.0.0</version>
   <packaging>jar</packaging>
 
 	<name>Spring Boot Starter Platori</name>
@@ -15,7 +15,7 @@
     <java.version>21</java.version>
     <spring-boot.version>4.1.2</spring-boot.version>
     <spring-cloud.version>2025.1.4</spring-cloud.version>
-    <keenvil-cork-starter.version>5.0.0-rc.1</keenvil-cork-starter.version>
+    <keenvil-cork-starter.version>5.0.0</keenvil-cork-starter.version>
   </properties>
 
   <dependencyManagement>
