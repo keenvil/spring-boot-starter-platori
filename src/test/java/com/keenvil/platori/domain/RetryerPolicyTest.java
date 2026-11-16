@@ -17,7 +17,7 @@ public class RetryerPolicyTest {
   @Test
   public void create() throws Exception {
 
-    RetryableException e = new RetryableException(500, "", HttpMethod.GET, (Long) null, (Request) null);
+    RetryableException e = new RetryableException(500, "", HttpMethod.GET, (Long) null, RetryerPolicyBackoffTest.request(HttpMethod.GET));
 
     RetryerPolicy retryerPolicy = new RetryerPolicy();
 
@@ -34,7 +34,7 @@ public class RetryerPolicyTest {
   @Test(expected = RetryableException.class)
   public void create_exception() throws Exception {
 
-    RetryableException e = new RetryableException(500, "", HttpMethod.GET, (Long) null, (Request) null);
+    RetryableException e = new RetryableException(500, "", HttpMethod.GET, (Long) null, RetryerPolicyBackoffTest.request(HttpMethod.GET));
 
     RetryerPolicy retryerPolicy = new RetryerPolicy();
 

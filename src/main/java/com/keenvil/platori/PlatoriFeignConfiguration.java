@@ -43,6 +43,10 @@ public class PlatoriFeignConfiguration {
   @Value("${keenvil.platori.feign.options.backoff:500}")
   private long backoff;
 
+  /** Tope del backoff exponencial (ms). Ver {@link RetryerPolicy}. */
+  @Value("${keenvil.platori.feign.options.maxBackoff:2000}")
+  private long maxBackoff;
+
   @Bean
   public Logger.Level feignLoggerLevel() {
     return level;
@@ -60,6 +64,6 @@ public class PlatoriFeignConfiguration {
 
   @Bean
   public Retryer retryer() {
-    return new RetryerPolicy(maxAttempts, backoff);
+    return new RetryerPolicy(maxAttempts, backoff, maxBackoff);
   }
 }
